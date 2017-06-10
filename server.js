@@ -13,6 +13,45 @@ app.post('/addRequests', (req, res) => {
   const input = req.body.input;
   const result = [];
   const promises = []
+
+  promises.push(new Promise(function(resolve, reject) {
+    request.get(`https://kloop.kg/?s=${input}`, (err, data) => {
+      const dom = new JSDOM(data.body);
+      const urlsAndTitles = dom.window.document.querySelectorAll('.td-module-thumb');
+      const results = [];
+      for (let i = 0; i < urlsAndTitles.length; i++) {
+        results.push({
+          url: urlsAndTitles[i].children[0].href,
+          timestamp: +new Date(),
+          title: urlsAndTitles[i].children[0].title
+        })
+      }
+      resolve(results);
+    })
+  }))
+
+  promises.push(new Promise(function(resolve, reject) {
+    request.get(`http://zanoza.kg/?search=${input}`, (err, data) => {
+      const dom = new JSDOM(data.body);
+      const titles = dom.window.document.querySelectorAll('.n');
+      const timestamps = dom.window.document.querySelectorAll('.topic_time_create');
+      const urls = dom.window.document.querySelectorAll('.t');
+      const results = [];
+
+      for (let i = 0; i < titles.length; i++) {
+        results.push(
+          {
+            title: titles[i].textContent,
+            timestamp: timestamps[i].textContent,
+            url: urls[i].children[0].href
+          }
+        )
+      }
+
+      resolve(results);
+    })
+  }))
+
   promises.push(new Promise(function(resolve, reject) {
     request.get(`http://searchapp.cnn.com/search/query.jsp?page=1&npp=10&start=1&text=${input}&type=all&bucket=true&sort=relevance&csiID=csi1`, (err, data) => {
     const dom = new JSDOM(data.body);
@@ -59,8 +98,10 @@ app.post('/addRequests', (req, res) => {
   Promise.all(promises)
     .then((values) => {
       res.send({
-        cnn: values[0],
-        lenta: values[1]
+        kloop: values[0],
+        zanoza: values[1],
+        cnn: values[2],
+        lenta: values[3]
       })
     })
 
