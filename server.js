@@ -9,6 +9,12 @@ const { JSDOM } = jsdom;
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 app.post('/addRequests', (req, res) => {
   const input = req.body.input;
   const result = [];
@@ -108,6 +114,6 @@ app.post('/addRequests', (req, res) => {
 
 })
 
-app.listen(3000, () => {
-  console.log('Example app listening on port 3000!')
+app.listen(3032, () => {
+  console.log('Example app listening on port 3032!')
 })
