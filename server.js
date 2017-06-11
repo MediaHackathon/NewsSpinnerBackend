@@ -25,6 +25,9 @@ app.post('/addRequests', (req, res) => {
 
   promises.push(new Promise(function(resolve, reject) {
     request.get(`https://kloop.kg/?s=${input}`, (err, data) => {
+      if (err || typeof data === 'undefined') {
+        return reject()
+      }
       const dom = new JSDOM(data.body);
       const urlsAndTitles = dom.window.document.querySelectorAll('.td-module-thumb');
       const results = [];
@@ -36,18 +39,21 @@ app.post('/addRequests', (req, res) => {
           title: urlsAndTitles[i].children[0].title
         })
       }
-      resolve(results);
+      return resolve(results);
     })
   }));
 
   promises.push(new Promise(function(resolve, reject) {
     request.get(`http://zanoza.kg/?search=${input}`, (err, data) => {
+      if (err || typeof data === 'undefined') {
+        return reject()
+      }
       const dom = new JSDOM(data.body);
       const titles = dom.window.document.querySelectorAll('.n');
       const timestamps = dom.window.document.querySelectorAll('.topic_time_create');
       const urls = dom.window.document.querySelectorAll('.t');
       const results = [];
-9
+
       for (let i = 0; i < titles.length; i++) {
         const date = timestamps[i].textContent;
 
@@ -60,12 +66,15 @@ app.post('/addRequests', (req, res) => {
         )
       }
 
-      resolve(results);
+      return resolve(results);
     })
   }));
 
   promises.push(new Promise(function(resolve, reject) {
     request.get(`http://searchapp.cnn.com/search/query.jsp?page=1&npp=10&start=1&text=${input}&type=all&bucket=true&sort=relevance&csiID=csi1`, (err, data) => {
+    if (err || typeof data === 'undefined') {
+      return reject()
+    }
     const dom = new JSDOM(data.body);
     const testReg = new RegExp(input, 'ig');
     const articles = JSON.parse(dom.window.document.querySelector("#jsCode").value).results;
@@ -82,12 +91,17 @@ app.post('/addRequests', (req, res) => {
           )
         }
       });
-      resolve(results);
+      return resolve(results);
   })
   }));
 
   promises.push(new Promise(function(resolve, reject) {
     request.get(`https://lenta.ru/search/v2/process?from=0&size=100&sort=2&title_only=0&domain=1&modified%2Cformat=yyyy-MM-dd&query=${input}`, (err, data) => {
+
+      if (err || typeof data === 'undefined') {
+        return reject()
+      }
+
       const articles = JSON.parse(data.body).matches;
       const testReg = new RegExp(input, 'ig');
       const results = [];
@@ -103,7 +117,7 @@ app.post('/addRequests', (req, res) => {
           )
         }
       });
-      resolve(results);
+      return resolve(results);
     })
   }));
 
@@ -115,6 +129,9 @@ app.post('/addRequests', (req, res) => {
         cnn: values[2],
         lenta: values[3]
       })
+    })
+    .catch((err) => {
+      res.send({})
     })
 });
 
