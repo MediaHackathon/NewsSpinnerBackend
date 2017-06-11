@@ -1,13 +1,14 @@
-const express = require('express')
+const express = require('express');
 const app = express();
 const dbManager = require('./dbManager');
 const bodyParser = require('body-parser');
 const request = require('request');
+const moment = require("moment");
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -18,23 +19,24 @@ app.use((req, res, next) => {
 app.post('/addRequests', (req, res) => {
   const input = req.body.input;
   const result = [];
-  const promises = []
+  const promises = [];
 
   promises.push(new Promise(function(resolve, reject) {
     request.get(`https://kloop.kg/?s=${input}`, (err, data) => {
       const dom = new JSDOM(data.body);
       const urlsAndTitles = dom.window.document.querySelectorAll('.td-module-thumb');
       const results = [];
+      const date = new Date();
       for (let i = 0; i < urlsAndTitles.length; i++) {
         results.push({
           url: urlsAndTitles[i].children[0].href,
-          timestamp: +new Date(),
+          timestamp: moment(date).format(),
           title: urlsAndTitles[i].children[0].title
         })
       }
       resolve(results);
     })
-  }))
+  }));
 
   promises.push(new Promise(function(resolve, reject) {
     request.get(`http://zanoza.kg/?search=${input}`, (err, data) => {
@@ -45,10 +47,12 @@ app.post('/addRequests', (req, res) => {
       const results = [];
 
       for (let i = 0; i < titles.length; i++) {
+        const date = timestamps[i].textContent;
+
         results.push(
           {
             title: titles[i].textContent,
-            timestamp: timestamps[i].textContent,
+            timestamp: moment(date, 'YYYY.MM.DD'),
             url: urls[i].children[0].href
           }
         )
@@ -56,7 +60,7 @@ app.post('/addRequests', (req, res) => {
 
       resolve(results);
     })
-  }))
+  }));
 
   promises.push(new Promise(function(resolve, reject) {
     request.get(`http://searchapp.cnn.com/search/query.jsp?page=1&npp=10&start=1&text=${input}&type=all&bucket=true&sort=relevance&csiID=csi1`, (err, data) => {
@@ -71,14 +75,14 @@ app.post('/addRequests', (req, res) => {
               text: article.description,
               title: article.title,
               url: article.url,
-              timestamp: article.mediaDateUts
+              timestamp: moment(article.mediaDateUts, 'HH:mm A, MMM DD, YYYY').format()
             }
           )
-        };
-      })
+        }
+      });
       resolve(results);
   })
-  }))
+  }));
 
   promises.push(new Promise(function(resolve, reject) {
     request.get(`https://lenta.ru/search/v2/process?from=0&size=100&sort=2&title_only=0&domain=1&modified%2Cformat=yyyy-MM-dd&query=${input}`, (err, data) => {
@@ -92,14 +96,14 @@ app.post('/addRequests', (req, res) => {
               text: article.text,
               title: article.title,
               url: article.url,
-              timestamp: article.modified
+              timestamp: moment(new Date().setMilliseconds(article.modified)).format()
             }
           )
-        };
-      })
+        }
+      });
       resolve(results);
     })
-  }))
+  }));
 
   Promise.all(promises)
     .then((values) => {
@@ -110,10 +114,8 @@ app.post('/addRequests', (req, res) => {
         lenta: values[3]
       })
     })
-
-
-})
+});
 
 app.listen(3032, () => {
   console.log('Example app listening on port 3032!')
-})
+});
