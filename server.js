@@ -52,7 +52,7 @@ app.post('/addRequests', (req, res) => {
         results.push(
           {
             title: titles[i].textContent,
-            timestamp: moment(date, 'YYYY.MM.DD'),
+            timestamp: moment(date, 'DD.MM.YYYY'),
             url: urls[i].children[0].href
           }
         )
