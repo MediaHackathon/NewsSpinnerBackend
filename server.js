@@ -7,6 +7,8 @@ const moment = require("moment");
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 
+const formatDate = 'MMMM Do YYYY, h:mm';
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
@@ -30,7 +32,7 @@ app.post('/addRequests', (req, res) => {
       for (let i = 0; i < urlsAndTitles.length; i++) {
         results.push({
           url: urlsAndTitles[i].children[0].href,
-          timestamp: moment(date).format(),
+          timestamp: moment(date).format(formatDate),
           title: urlsAndTitles[i].children[0].title
         })
       }
@@ -45,14 +47,14 @@ app.post('/addRequests', (req, res) => {
       const timestamps = dom.window.document.querySelectorAll('.topic_time_create');
       const urls = dom.window.document.querySelectorAll('.t');
       const results = [];
-
+9
       for (let i = 0; i < titles.length; i++) {
         const date = timestamps[i].textContent;
 
         results.push(
           {
             title: titles[i].textContent,
-            timestamp: moment(date, 'DD.MM.YYYY'),
+            timestamp: moment(date, 'DD.MM.YYYY').format(formatDate),
             url: urls[i].children[0].href
           }
         )
@@ -75,7 +77,7 @@ app.post('/addRequests', (req, res) => {
               text: article.description,
               title: article.title,
               url: article.url,
-              timestamp: moment(article.mediaDateUts, 'HH:mm A, MMM DD, YYYY').format()
+              timestamp: moment(article.mediaDateUts, 'HH:mm A, MMM DD, YYYY').format(formatDate)
             }
           )
         }
@@ -96,7 +98,7 @@ app.post('/addRequests', (req, res) => {
               text: article.text,
               title: article.title,
               url: article.url,
-              timestamp: moment(new Date().setMilliseconds(article.modified)).format()
+              timestamp: moment(new Date().setMilliseconds(article.modified)).format(formatDate)
             }
           )
         }
